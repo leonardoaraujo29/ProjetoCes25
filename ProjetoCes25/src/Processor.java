@@ -10,7 +10,7 @@ public class Processor {
 		tomasulo = new Tomasulo();
 		instructions = new ArrayList<Instruction>();
 		Instruction instruction = new Instruction();
-		instruction.setStatus("Issue");
+		instruction.set_status("Issue");
 		instructions.add(instruction);
 		
 	}
@@ -19,7 +19,7 @@ public class Processor {
 		for(clock = 0;clock<1;clock++){
 			//pegar as instruções issue
 			for(int i = 0;i<instructions.size();i++){
-				if(instructions.get(i).getStatus() == "Issue"){
+				if(instructions.get(i).get_status() == "Issue"){
 					tomasulo.Issue(instructions.get(i));
 				}
 				
