@@ -5,8 +5,12 @@ public class Tomasulo {
 
 	private ReorderBuffer[] rob = new ReorderBuffer[10];
 	private ReservationStation[] rs;
+
+	private String[] memoria = new String[4000];
 	
 	private Register[] registers = new Register[32];
+
+	private Prediction predictor = new Prediction();
 	
 	private int h;
 	private int b = 0;
@@ -147,10 +151,68 @@ public class Tomasulo {
 	}
 	
 	public void Write(Instruction instruction){
-		
+		int r = instruction.getReservationStation();
+		int b_aux = getROBposition(instruction);
+		rs[r].setBusy(false);
+		for(int i = 0; i<10; i++){
+			if(rs[i].getQj() == b_aux){
+				rs[i].setVj(rs[r].getResult());
+				rs[i].setQj(0);
+			}
+			else if(rs[i].getQk() == b_aux){
+				rs[i].setVk(rs[r].getResult());
+				rs[i].setQk(0);
+			}
+		}
+		rob[b_aux].setValue(rs[r].getResult());
+		rob[b_aux].setReady(true);
 	}
 	
 	public void Commit(Instruction instruction){
-		
+		String op = instruction.get_op();
+		if(op.substring(0,1).equals("B") || op.equals("Jmp")){
+			/**
+			 * if(ROB[h].Instruction == Branch)
+			 * 	{if (branch is mispredicted)
+			 * 		{clear ROB[h], RegisterStat; fetch branch dest;};}
+			 */
+		}
+		else if(op.equals("Sw")){
+			int AddressNumber = rs[instruction.getReservationStation()].getAddress();
+			int ROBnumber = getROBposition(instruction);
+			memoria[AddressNumber] = intTo32Binary(rob[ROBnumber].getValue());
+		}
+		else{
+			int ROBnumber = getROBposition(instruction);
+			int d_aux = rob[ROBnumber].getDest();
+			registers[d_aux].setValue(rob[ROBnumber].getValue());
+		}
+
+		int ROBnumber = getROBposition(instruction);
+		int d_aux = rob[ROBnumber].getDest();
+		rob[ROBnumber].setBusy(false);
+		if(registers[d_aux].getReorderNum() == ROBnumber){
+			registers[d_aux].setBusy(false);
+		}
+	}
+
+	/* --------------------------------------------------------------------------------------*/
+
+	public int getROBposition(Instruction instruction){
+		int ROBnumber = -1;
+		for(int i = 0; i<10; i++){
+			if(rob[i].getInstruction().equals(instruction)){
+				ROBnumber = i;
+				i = 10;
+			}
+		}
+		return ROBnumber;
+	}
+
+	public String intTo32Binary(int value){
+		String binaryString = Integer.toBinaryString(value);
+		while(binaryString.length() < 32)
+			binaryString = "0" + binaryString;
+		return binaryString;
 	}
 }
