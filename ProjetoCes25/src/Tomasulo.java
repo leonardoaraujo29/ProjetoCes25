@@ -34,8 +34,38 @@ public class Tomasulo {
 			rob.get(b).setInstruction(instruction);
 			rob.get(b).setDest(instruction.get_rd());
 			rob.get(b).setReady(false);
+			if(instruction.get_op() == "Add" || instruction.get_op() == "Sub" || instruction.get_op() == "Mul" || instruction.get_op() == "Addi" || instruction.get_op() == "Sw"){
+				if(registers[instruction.get_rt()].isBusy()){
+					h = registers[instruction.get_rt()].getReorderNum();
+					if(rob.get(h).isReady()){
+						rs.get(r).setVk(rob.get(h).getValue());
+						rs.get(r).setQk(0);
+					}
+					else{
+						rs.get(r).setQk(h);
+					}
+				}
+				else{
+					rs.get(r).setVk(registers[instruction.get_rt()].getValue());
+					rs.get(r).setQk(0);
+				}
+			}
+			if(instruction.get_op() == "Add" || instruction.get_op() == "Sub" || instruction.get_op() == "Mul" || instruction.get_op() == "Addi"){
+				registers[instruction.get_rd()].setReorderNum(b);
+				registers[instruction.get_rd()].setBusy(true);
+				rob.get(b).setDest(instruction.get_rd());
+			}
+			if(instruction.get_op() == "Lw"){
+				rs.get(r).setAddress(instruction.get_immediate());
+				registers[instruction.get_rt()].setReorderNum(b);
+				registers[instruction.get_rt()].setBusy(true);
+				rob.get(b).setDest(instruction.get_rt());
+			}
+			if(instruction.get_op() == "Sw"){
+				rs.get(r).setAddress(instruction.get_immediate());
+			}
+			instruction.set_status("Execute");
 		}
-		instruction.set_status("Execute");
 	}
 	
 	public void Execute(Instruction instruction){
