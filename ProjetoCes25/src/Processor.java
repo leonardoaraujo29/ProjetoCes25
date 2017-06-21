@@ -5,14 +5,14 @@ public class Processor {
 	private int clock;
 	private List<Instruction> instructions;
 	private Tomasulo tomasulo;
+	InstructionReader instructionReader;
 	
 	public Processor(){
 		tomasulo = new Tomasulo();
 		instructions = new ArrayList<Instruction>();
-		Instruction instruction = new Instruction();
-		instruction.set_status("Issue");
-		instructions.add(instruction);
-		
+		instructionReader = new InstructionReader();
+		instructions = instructionReader.getInstructions();
+	
 	}
 	public void run(){
 		int lastIssued;
