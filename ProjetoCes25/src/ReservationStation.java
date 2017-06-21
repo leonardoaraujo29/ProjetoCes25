@@ -1,6 +1,6 @@
 
 public class ReservationStation {
-	private String name;
+	private String type;
 	private boolean busy;
 	private String op;
 	private  int vj;
@@ -10,11 +10,9 @@ public class ReservationStation {
 	private int qk;
 	private int address;
 	private int dest;
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
+	private int result;
+	public ReservationStation(){
+		busy = false;
 	}
 	public boolean isBusy() {
 		return busy;
@@ -63,6 +61,18 @@ public class ReservationStation {
 	}
 	public void setDest(int dest) {
 		this.dest = dest;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
+	public int getResult() {
+		return result;
+	}
+	public void setResult(int result) {
+		this.result = result;
 	}
 
 }

@@ -6,6 +6,10 @@ public class ReorderBuffer {
 	private boolean ready;
 	private Instruction instruction;
 	private int Address;
+	
+	public ReorderBuffer(){
+		busy = false;
+	}
 	public boolean isBusy() {
 		return busy;
 	}

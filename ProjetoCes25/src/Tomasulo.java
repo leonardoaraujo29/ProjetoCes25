@@ -3,100 +3,145 @@ import java.util.List;
 
 public class Tomasulo {
 
-	private List<ReorderBuffer> rob = new ArrayList<ReorderBuffer>();
-	private List<ReservationStation> rs = new ArrayList<ReservationStation>();
+	private ReorderBuffer[] rob = new ReorderBuffer[10];
+	private ReservationStation[] rs;
 	
-	private int numReorderBuffers = 5;
 	private Register[] registers = new Register[32];
 	
 	private int h;
+	private int b = 0;
+	public Tomasulo(){
+		rs = new ReservationStation[10];
+		for(int i = 0; i <5; i++){
+			rs[i].setType("Load/Store");
+		}
+		for(int i = 5; i <8; i++){
+			rs[i].setType("Add");
+		}
+		for(int i = 8; i <11; i++){
+			rs[i].setType("Mult");
+		}
+		
+	}
 	public void Issue(Instruction instruction){
-		int r = 0;
-		int b = 0;
-		if(rob.size() < numReorderBuffers){
+		int maxrs = -1;
+		int minrs = 0;
+		String op = instruction.get_op();
+		if(op.equals("Add") || op.equals("Sub") || op.equals("Addi") || op.equals("Mul") || op.equals("Beq") || op.equals("Ble") || op.equals("Bne") || op.equals("Jmp")){
+			maxrs = 7;
+			minrs = 5;
+		}
+		else if(op.equals("Mul")){
+			maxrs = 10;
+			minrs = 8;
+		}
+		else if(op.equals("Lw") || op.equals("Sw")){
+			maxrs = 4;
+			minrs = 0;
+		}
+		int r = -1;
+		for (int i = minrs;i<=maxrs;i++){
+			if(!rs[i].isBusy())
+				r = i;
+		}
+		if(!rob[b].isBusy() && r != -1){
 			if(registers[instruction.get_rs()].isBusy()){
 				h = registers[instruction.get_rs()].getReorderNum();
-				if(rob.get(h).isReady()){
-					rs.get(r).setVj(rob.get(h).getValue());
-					rs.get(r).setQj(0);
+				if(rob[h].isReady()){
+					rs[r].setVj(rob[h].getValue());
+					rs[r].setQj(0);
 				}
 				else{
-					rs.get(r).setQj(h);
+					rs[r].setQj(h);
 				}
-				
 			}
 			else{
-				rs.get(r).setVj(registers[instruction.get_rs()].getValue());
-				rs.get(r).setQj(0);
+				rs[r].setVj(registers[instruction.get_rs()].getValue());
+				rs[r].setQj(0);
 			}
-			rs.get(r).setBusy(true);
-			rs.get(r).setDest(b);
-			rob.get(b).setInstruction(instruction);
-			rob.get(b).setDest(instruction.get_rd());
-			rob.get(b).setReady(false);
-			if(instruction.get_op() == "Add" || instruction.get_op() == "Sub" || instruction.get_op() == "Mul" || instruction.get_op() == "Addi" || instruction.get_op() == "Sw"){
+			rs[r].setBusy(true);
+			rs[r].setDest(b);
+			rob[b].setInstruction(instruction);
+			rob[b].setDest(instruction.get_rd());
+			rob[b].setReady(false);
+			if(instruction.get_op() == "Add" || instruction.get_op() == "Sub" || instruction.get_op() == "Mul" || instruction.get_op() == "Addi" || instruction.get_op() == "Sw" || instruction.get_op() == "Beq" || instruction.get_op() == "Ble" || instruction.get_op() == "Bne"){
 				if(registers[instruction.get_rt()].isBusy()){
 					h = registers[instruction.get_rt()].getReorderNum();
-					if(rob.get(h).isReady()){
-						rs.get(r).setVk(rob.get(h).getValue());
-						rs.get(r).setQk(0);
+					if(rob[h].isReady()){
+						rs[r].setVk(rob[h].getValue());
+						rs[r].setQk(0);
 					}
 					else{
-						rs.get(r).setQk(h);
+						rs[r].setQk(h);
 					}
 				}
 				else{
-					rs.get(r).setVk(registers[instruction.get_rt()].getValue());
-					rs.get(r).setQk(0);
+					rs[r].setVk(registers[instruction.get_rt()].getValue());
+					rs[r].setQk(0);
 				}
 			}
 			if(instruction.get_op() == "Add" || instruction.get_op() == "Sub" || instruction.get_op() == "Mul" || instruction.get_op() == "Addi"){
 				registers[instruction.get_rd()].setReorderNum(b);
 				registers[instruction.get_rd()].setBusy(true);
-				rob.get(b).setDest(instruction.get_rd());
+				rob[b].setDest(instruction.get_rd());
 			}
 			if(instruction.get_op() == "Lw"){
-				rs.get(r).setAddress(instruction.get_immediate());
+				rs[r].setAddress(instruction.get_immediate());
 				registers[instruction.get_rt()].setReorderNum(b);
 				registers[instruction.get_rt()].setBusy(true);
-				rob.get(b).setDest(instruction.get_rt());
+				rob[b].setDest(instruction.get_rt());
 			}
 			if(instruction.get_op() == "Sw"){
-				rs.get(r).setAddress(instruction.get_immediate());
+				rs[r].setAddress(instruction.get_immediate());
 			}
 			instruction.set_status("Execute");
+			instruction.setReservationStation(r);
+			b++;
+			if(b == 10)
+				b = 0;
 		}
 	}
 	
 	public void Execute(Instruction instruction){
-		int r = 0; // MUDAR DEPOIS
-		int h = 0; // MUDAR DEPOIS
+		int r = instruction.getReservationStation();
 
 		String op = instruction.get_op();
 		if(op.equals("Add") || op.equals("Sub") || op.equals("Addi") || op.equals("Mul")){
-			if(rs.get(r).getQj() == 0 && rs.get(r).getQk() == 0){
+			if(rs[r].getQj() == 0 && rs[r].getQk() == 0){
+				instruction.setExecutionClocks(instruction.getExecutionClocks() +1);
 				switch(op){
 					case "Add":
-						//...
+						rs[r].setResult(rs[r].getVj() + rs[r].getVk());
 						break;
 					case "Sub":
-						//...
+						rs[r].setResult(rs[r].getVj() - rs[r].getVk());
 						break;
 					case "Addi":
-						//...
+						rs[r].setResult(rs[r].getVj() + rs[r].getVk());
 						break;
 					case "Mul":
-						//...
+						rs[r].setResult(rs[r].getVj() * rs[r].getVk());
 						break;
 				}
 			}
 		}
 		else if(op.equals("Lw")){
-			//FAZER ETAPA 1 E ETAPA 2
+			
+			if(instruction.getLoadStep() == 1 && rs[r].getQj() == 0){
+				instruction.setExecutionClocks(instruction.getExecutionClocks() +1);
+				rs[r].setAddress(rs[r].getVj()+rs[r].getAddress());
+				instruction.setLoadStep(2);
+				
+			}
+			//PAREI AQUI
+			else if(instruction.getLoadStep() == 2){
+				instruction.setExecutionClocks(instruction.getExecutionClocks() +1);
+				
+			}
 		}
 		else if(op.equals("Sw")){
-			if(rs.get(r).getQj() == 0){
-				rob.get(h).setAddress(rs.get(r).getVj()+rs.get(r).getAddress());
+			if(rs[r].getQj() == 0){
+				rob[h].setAddress(rs[r].getVj()+rs[r].getAddress());
 			}
 		}
 	}
