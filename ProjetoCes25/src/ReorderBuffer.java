@@ -5,6 +5,7 @@ public class ReorderBuffer {
 	private int value;
 	private boolean ready;
 	private Instruction instruction;
+	private int Address;
 	public boolean isBusy() {
 		return busy;
 	}
@@ -35,4 +36,6 @@ public class ReorderBuffer {
 	public void setInstruction(Instruction instruction) {
 		this.instruction = instruction;
 	}
+	public int getAddress(){ return Address; }
+	public void setAddress(int address){ this.Address = address; }
 }

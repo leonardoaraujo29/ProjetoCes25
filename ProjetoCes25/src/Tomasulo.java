@@ -69,7 +69,36 @@ public class Tomasulo {
 	}
 	
 	public void Execute(Instruction instruction){
-		
+		int r = 0; // MUDAR DEPOIS
+		int h = 0; // MUDAR DEPOIS
+
+		String op = instruction.get_op();
+		if(op.equals("Add") || op.equals("Sub") || op.equals("Addi") || op.equals("Mul")){
+			if(rs.get(r).getQj() == 0 && rs.get(r).getQk() == 0){
+				switch(op){
+					case "Add":
+						//...
+						break;
+					case "Sub":
+						//...
+						break;
+					case "Addi":
+						//...
+						break;
+					case "Mul":
+						//...
+						break;
+				}
+			}
+		}
+		else if(op.equals("Lw")){
+			//FAZER ETAPA 1 E ETAPA 2
+		}
+		else if(op.equals("Sw")){
+			if(rs.get(r).getQj() == 0){
+				rob.get(h).setAddress(rs.get(r).getVj()+rs.get(r).getAddress());
+			}
+		}
 	}
 	
 	public void Write(Instruction instruction){
