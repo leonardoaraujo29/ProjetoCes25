@@ -9,8 +9,6 @@ public class Tomasulo {
 	private String[] memoria = new String[4000];
 	
 	private Register[] registers = new Register[32];
-
-	private Prediction predictor = new Prediction();
 	
 	private int h;
 	private int b = 0;
